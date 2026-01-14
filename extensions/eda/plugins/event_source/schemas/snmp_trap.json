@@ -1,0 +1,415 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://redhat.com/ansible_events/sources/snmp_trap.json",
+    "title": "SNMP Trap Source Plugin",
+    "description": "An ansible-rulebook event source plugin for receiving events via SNMP traps. Supports SNMPv1, SNMPv2c, and SNMPv3 protocols.",
+    "type": "object",
+    "properties": {
+        "host": {
+            "description": "The hostname or IP address to listen on",
+            "type": "string",
+            "title": "Host",
+            "default": "0.0.0.0"
+        },
+        "port": {
+            "description": "The UDP port to listen on for SNMP traps",
+            "type": "integer",
+            "title": "Port",
+            "default": 162
+        },
+        "version": {
+            "description": "SNMP version to use",
+            "type": "string",
+            "title": "Version",
+            "enum": [
+                "v1",
+                "v2c",
+                "v3"
+            ],
+            "default": "v2c"
+        },
+        "community": {
+            "description": "Community string for SNMPv1 and SNMPv2c (backward compatible, use communities for multiple)",
+            "type": "string",
+            "title": "Community",
+            "default": "public"
+        },
+        "communities": {
+            "description": "List of community string configurations for SNMPv1 and SNMPv2c. Supports multiple communities with optional per-community configuration overrides",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Community string name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Optional description"
+                    },
+                    "rate_limit_per_source": {
+                        "type": "integer",
+                        "description": "Per-source rate limit override"
+                    },
+                    "rate_limit_per_source_burst": {
+                        "type": "integer",
+                        "description": "Per-source burst size override"
+                    },
+                    "filter_oids": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "OID filter override"
+                    },
+                    "filter_oid_patterns": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "OID pattern filter override"
+                    }
+                },
+                "required": ["name"]
+            },
+            "title": "Communities"
+        },
+        "community_validation_mode": {
+            "description": "Validation mode for community strings. 'allow-list' accepts any configured community, 'strict' requires exact match, 'permissive' accepts all",
+            "type": "string",
+            "enum": ["allow-list", "strict", "permissive"],
+            "title": "Community Validation Mode",
+            "default": "allow-list"
+        },
+        "community_mismatch_action": {
+            "description": "Action to take when community string doesn't match. 'discard' silently discards, 'log' logs and discards, 'queue' queues with warning metadata",
+            "type": "string",
+            "enum": ["discard", "log", "queue"],
+            "title": "Community Mismatch Action",
+            "default": "discard"
+        },
+        "community_stats_enabled": {
+            "description": "Enable community string usage statistics tracking",
+            "type": "boolean",
+            "title": "Community Stats Enabled",
+            "default": false
+        },
+        "v3_username": {
+            "description": "Username for SNMPv3 authentication",
+            "type": "string",
+            "title": "V3 Username"
+        },
+        "v3_auth_key": {
+            "description": "Authentication key for SNMPv3",
+            "type": "string",
+            "title": "V3 Auth Key",
+            "format": "password"
+        },
+        "v3_priv_key": {
+            "description": "Privacy key for SNMPv3",
+            "type": "string",
+            "title": "V3 Priv Key",
+            "format": "password"
+        },
+        "v3_auth_protocol": {
+            "description": "Authentication protocol for SNMPv3",
+            "type": "string",
+            "title": "V3 Auth Protocol",
+            "enum": [
+                "MD5",
+                "SHA",
+                "SHA224",
+                "SHA256",
+                "SHA384",
+                "SHA512"
+            ],
+            "default": "SHA"
+        },
+        "v3_priv_protocol": {
+            "description": "Privacy protocol for SNMPv3",
+            "type": "string",
+            "title": "V3 Priv Protocol",
+            "enum": [
+                "DES",
+                "3DES",
+                "AES128",
+                "AES192",
+                "AES256"
+            ],
+            "default": "AES128"
+        },
+        "v3_security_level": {
+            "description": "Security level for SNMPv3 (backward compatible, use security_contexts for multiple)",
+            "type": "string",
+            "title": "V3 Security Level",
+            "enum": [
+                "noAuthNoPriv",
+                "authNoPriv",
+                "authPriv"
+            ],
+            "default": "authPriv"
+        },
+        "security_contexts": {
+            "description": "List of security context configurations for SNMPv3. Supports multiple contexts with optional per-context configuration overrides",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "description": "SNMPv3 username"
+                    },
+                    "auth_key": {
+                        "type": "string",
+                        "format": "password",
+                        "description": "Authentication key"
+                    },
+                    "priv_key": {
+                        "type": "string",
+                        "format": "password",
+                        "description": "Privacy key"
+                    },
+                    "auth_protocol": {
+                        "type": "string",
+                        "enum": ["MD5", "SHA", "SHA224", "SHA256", "SHA384", "SHA512"],
+                        "description": "Authentication protocol",
+                        "default": "SHA"
+                    },
+                    "priv_protocol": {
+                        "type": "string",
+                        "enum": ["DES", "3DES", "AES128", "AES192", "AES256"],
+                        "description": "Privacy protocol",
+                        "default": "AES128"
+                    },
+                    "security_level": {
+                        "type": "string",
+                        "enum": ["noAuthNoPriv", "authNoPriv", "authPriv"],
+                        "description": "Security level",
+                        "default": "authPriv"
+                    },
+                    "rate_limit_per_source": {
+                        "type": "integer",
+                        "description": "Per-source rate limit override"
+                    },
+                    "rate_limit_per_source_burst": {
+                        "type": "integer",
+                        "description": "Per-source burst size override"
+                    },
+                    "filter_oids": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "OID filter override"
+                    },
+                    "filter_oid_patterns": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "OID pattern filter override"
+                    }
+                },
+                "required": ["username"]
+            },
+            "title": "Security Contexts"
+        },
+        "security_context_validation_mode": {
+            "description": "Validation mode for security contexts. 'allow-list' accepts any configured context, 'strict' requires exact match, 'permissive' accepts all",
+            "type": "string",
+            "enum": ["allow-list", "strict", "permissive"],
+            "title": "Security Context Validation Mode",
+            "default": "allow-list"
+        },
+        "security_context_mismatch_action": {
+            "description": "Action to take when security context doesn't match. 'discard' silently discards, 'log' logs and discards, 'queue' queues with warning metadata",
+            "type": "string",
+            "enum": ["discard", "log", "queue"],
+            "title": "Security Context Mismatch Action",
+            "default": "discard"
+        },
+        "security_context_stats_enabled": {
+            "description": "Enable security context usage statistics tracking",
+            "type": "boolean",
+            "title": "Security Context Stats Enabled",
+            "default": false
+        },
+        "include_raw": {
+            "description": "Include raw trap data in the event payload",
+            "type": "boolean",
+            "title": "Include Raw",
+            "default": true
+        },
+        "include_structured": {
+            "description": "Include structured trap data in the event payload",
+            "type": "boolean",
+            "title": "Include Structured",
+            "default": true
+        },
+        "mib_paths": {
+            "description": "List of directories containing MIB files for OID resolution",
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "title": "MIB Paths"
+        },
+        "mib_urls": {
+            "description": "List of URLs to download MIB files from",
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "title": "MIB URLs"
+        },
+        "auto_load_standard_mibs": {
+            "description": "Automatically load standard MIBs from public repositories",
+            "type": "boolean",
+            "title": "Auto Load Standard MIBs",
+            "default": true
+        },
+        "mib_cache_dir": {
+            "description": "Directory to cache compiled MIBs",
+            "type": "string",
+            "title": "MIB Cache Directory"
+        },
+        "filter_mode": {
+            "description": "Filtering mode: 'allow' processes only matching traps, 'deny' discards matching traps",
+            "type": "string",
+            "enum": [
+                "allow",
+                "deny"
+            ],
+            "title": "Filter Mode",
+            "default": "allow"
+        },
+        "filter_oids": {
+            "description": "List of OIDs to filter on (exact match)",
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "title": "Filter OIDs"
+        },
+        "filter_oid_patterns": {
+            "description": "List of OID patterns to filter on (supports wildcards, e.g., '1.3.6.1.4.1.*')",
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "title": "Filter OID Patterns"
+        },
+        "filter_communities": {
+            "description": "List of community strings to filter on",
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "title": "Filter Communities"
+        },
+        "filter_require_all": {
+            "description": "If true, all filter criteria must match (AND logic). If false, any filter matches (OR logic)",
+            "type": "boolean",
+            "title": "Filter Require All",
+            "default": false
+        },
+        "rate_limit_enabled": {
+            "description": "Enable rate limiting for SNMP traps to prevent system overload",
+            "type": "boolean",
+            "title": "Rate Limit Enabled",
+            "default": false
+        },
+        "rate_limit_global": {
+            "description": "Global rate limit in traps per second. Applies to all traps combined",
+            "type": "integer",
+            "title": "Rate Limit Global",
+            "minimum": 1
+        },
+        "rate_limit_global_burst": {
+            "description": "Global burst size (maximum tokens in bucket). Allows handling traffic spikes",
+            "type": "integer",
+            "title": "Rate Limit Global Burst",
+            "minimum": 1
+        },
+        "rate_limit_per_source": {
+            "description": "Per-source IP rate limit in traps per second. Limits traps from individual devices",
+            "type": "integer",
+            "title": "Rate Limit Per Source",
+            "minimum": 1
+        },
+        "rate_limit_per_source_burst": {
+            "description": "Per-source burst size (maximum tokens in bucket). Allows handling traffic spikes per device",
+            "type": "integer",
+            "title": "Rate Limit Per Source Burst",
+            "minimum": 1
+        },
+        "rate_limit_action": {
+            "description": "Action to take when rate limit is exceeded. 'discard' silently discards, 'log' logs and discards, 'queue' queues with metadata",
+            "type": "string",
+            "enum": [
+                "discard",
+                "log",
+                "queue"
+            ],
+            "title": "Rate Limit Action",
+            "default": "discard"
+        },
+        "rate_limit_window_seconds": {
+            "description": "Time window for rate calculation in seconds",
+            "type": "number",
+            "title": "Rate Limit Window Seconds",
+            "default": 1.0
+        },
+        "rate_limit_cleanup_interval": {
+            "description": "Interval in seconds to clean up inactive per-source rate limiters",
+            "type": "integer",
+            "title": "Rate Limit Cleanup Interval",
+            "default": 300
+        },
+        "rate_limit_include_stats": {
+            "description": "Include rate limiting statistics in event metadata",
+            "type": "boolean",
+            "title": "Rate Limit Include Stats",
+            "default": false
+        },
+        "inform_enabled": {
+            "description": "Enable SNMP inform support (acknowledged traps). Informs require a response acknowledgment",
+            "type": "boolean",
+            "title": "Inform Enabled",
+            "default": true
+        },
+        "inform_response_mode": {
+            "description": "Response mode for SNMP informs. 'minimal' sends empty acknowledgment, 'custom' includes configured variable bindings, 'none' sends no response (not recommended)",
+            "type": "string",
+            "enum": [
+                "minimal",
+                "custom",
+                "none"
+            ],
+            "title": "Inform Response Mode",
+            "default": "minimal"
+        },
+        "inform_response_varbinds": {
+            "description": "Custom variable bindings to include in inform response (only used when inform_response_mode is 'custom')",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "oid": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "string"
+                    }
+                }
+            },
+            "title": "Inform Response Variable Bindings"
+        },
+        "inform_response_timeout": {
+            "description": "Timeout in seconds for sending inform response",
+            "type": "number",
+            "title": "Inform Response Timeout",
+            "default": 5.0
+        },
+        "inform_require_ack": {
+            "description": "Require successful acknowledgment before queuing event. If false, event is queued immediately and response sent asynchronously",
+            "type": "boolean",
+            "title": "Inform Require Ack",
+            "default": false
+        }
+    },
+    "required": []
+}

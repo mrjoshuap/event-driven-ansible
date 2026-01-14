@@ -1,0 +1,35 @@
+---
+- name: test snmp trap source plugin
+  hosts: localhost
+  sources:
+    - name: SNMP Trap Listener
+      ansible.eda.snmp_trap:
+        host: "{{ SNMP_HOST | default('0.0.0.0') }}"
+        port: "{{ SNMP_PORT | default(16200) }}"
+        version: "{{ SNMP_VERSION | default('v2c') }}"
+        community: "{{ SNMP_COMMUNITY | default('public') }}"
+        include_raw: true
+        include_structured: true
+  rules:
+    - name: match cold start trap
+      condition: event.payload.structured.trap_type == "coldStart"
+      action:
+        debug:
+          msg: "Cold start trap received from {{ event.meta.source_ip }}"
+
+    - name: match link down trap
+      condition: event.payload.structured.trap_type == "linkDown"
+      action:
+        debug:
+          msg: "Link down trap received from {{ event.meta.source_ip }}"
+
+    - name: match any trap
+      condition: event.payload.structured is defined
+      action:
+        debug:
+          msg: "SNMP trap received: {{ event.payload.structured.trap_type }} from {{ event.meta.source_ip }}"
+
+    - name: shutdown
+      condition: event.payload.structured.trap_type == "shutdown"
+      action:
+        shutdown:
